@@ -3,8 +3,12 @@ require 'vendor/autoload.php';
 require 'functions.php';
 use SleekDB\Store;
 
-$dataDir = "database";
-$usersStore = new Store("users", $dataDir, ["timeout" => false]);
+// Define paths for both databases
+$dataDirs = ["database", "database-replica"];
+
+// Initialize stores for both databases
+$usersStoreMain = new Store("users", $dataDirs[0], ["timeout" => false]);
+$usersStoreReplica = new Store("users", $dataDirs[1], ["timeout" => false]);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = [
@@ -13,8 +17,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         "age" => intval($_POST["age"])
     ];
 
-    $usersStore->insert($user);
-    replicateData("insert", $user);
+    // Insert user into both databases
+    $usersStoreMain->insert($user);
+    $usersStoreReplica->insert($user);
 
     header("Location: index.php?message=Thêm thành công!");
     exit();
@@ -67,7 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
-
     <h1>Thêm Người Dùng</h1>
     <form method="POST">
         <input type="text" name="name" placeholder="Tên" required>
@@ -76,7 +80,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <button type="submit">Thêm</button>
     </form>
     <a href="index.php">Quay lại danh sách</a>
-
 </body>
 
 </html>
